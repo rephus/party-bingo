@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+     <title>Party Bingo</title>
+     <link rel="stylesheet" type="text/css" href="css/style.css">
+     <link rel="stylesheet" type="text/css" href="css/materialize.min.css">
+
+      <script languaje='javascript' src="js/jquery.min.js"></script>
+      <script languaje='javascript' src="js/mustache.min.js"></script>
+      <script languaje='javascript' src="js/materialize.min.js"></script>
+
+      <script type="text/javascript" src ='js/ui.js'></script>
+      <script type="text/javascript" src ='js/create_board.js'></script>
+
+   </head>
+   <body>
+
+   <script id='board-template' type=x-tmpl-mustache>
+     <div class="row board" game-id="{{id}}" game-title='{{title}}'>
+        <p>{{title}}</p>
+       {{#events}}
+
+           <div class='event col s{{rowSize}} checked-{{checked}}' event='{{i}}'>
+            {{value}}
+            </div>
+       {{/events}}
+     </div>
+
+   </script>
+
+     <div id='create-board-div' class='hidden screen screen-2'>
+       <button class='go-menu'> <-</button>
+
+       <input id='title-board' type='text'/>
+
+     <script id='event-template' type=x-tmpl-mustache>
+       <li>
+         <button class='remove-event'>-</button>
+         <input class='bingo-event' type='text'/>
+       </li>
+     </script>
+
+       <ul id='board-events'>
+         <li>
+           <button class='remove-event'>-</button>
+           <input class='bingo-event' type='text'/>
+         </li>
+       </ul>
+       <button id='add-event'>+</button>
+
+      <label><input type="checkbox" ></input>Private game</label>
+      <p>Anyone can play this board</p>
+      <p class='hidden'>People can join only by invitation</p>
+
+      <label><input type="checkbox" checked></input>Share board</label>
+      <p>This board will be public</p>
+      <p class='hidden'>This board won't be public</p>
+
+       <button id='create-board'> Send</button>
+
+       <p>This events are good for a panel 1x1. Recommended for x players.</p>
+     </div>
+
+
+    <div id='menu-div' class='hidden screen screen-1'>
+      <button class='public-games'>public-games</button>
+      <button class='public-boards'>public-boards</button>
+      <button class='my-games'>my-games</button>
+      <button class='my-boards'>my-boards</button>
+
+
+      <div id='list-boards-div'>
+      </div>
+
+      <img src='imgs/character-yellow.png'/>
+      <input class='my-avatar' type='hidden' value='yellow'/>
+      <!-- TODO cool random generation -->
+      <input class='my-alias' type='text' value='anonymous'/>
+
+      <button id='go-create-board'> + </a>
+    </div>
+
+    <div id='game-div' class='hidden screen screen-3'>
+
+      <button class='go-menu'> <-</button>
+
+      <button id='share'> Share</button>
+        <div class='my-board game-board'>
+
+        </div>
+
+          <hr/>
+          <div >
+          <script id='chat-template' type=x-tmpl-mustache>
+          {{#.}}
+
+              <li>
+                 <img src='imgs/character-{{avatar}}.png'/>
+                 <b>{{name}}</b>
+                 <p>{{message}}</p>
+              </li>
+            {{/.}}
+          </script>
+            <ul id='chat'>
+          </ul>
+
+            <input id='chat-text' type='text'/>
+            <button id='send-text'> Send </button>
+          </div>
+    </div>
+
+     <pre id='log'></pre>
+
+   </body>
+   <script type="text/javascript" src ='js/websockets.js'></script>
+</html>
