@@ -31,7 +31,7 @@ See `websocket.js` for client details.
 Boards can be cloned, but there is only 1 game per board.
 
 ## Data schema
-
+```
 boards {
   uuid: {
     id:uuid,
@@ -41,8 +41,9 @@ boards {
     authorName:  <boolean>
   }
 };
+```
 
-
+```
 games {
   uuid:  {
     id: uuid,
@@ -62,3 +63,4 @@ games {
     },
     private: <boolean>
 };
+```
