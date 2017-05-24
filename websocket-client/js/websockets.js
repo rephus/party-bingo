@@ -27,7 +27,7 @@ function connect() {
       };
 
       ws.onmessage = function (evt){
-        append("Message received: " + evt.data);
+        //append("Message received: " + evt.data);
         var json = JSON.parse(evt.data);
         parseJson (json) ;
       };
@@ -58,7 +58,7 @@ connect();
 var parseJson = function (json) {
   switch(json.key){
     case LIST_PUBLIC_GAMES:   loadBoards(json.games);  break;
-    case LOAD_GAME:   loadGame(json.board, json.gameId);  break;
+    case LOAD_GAME:   loadGame(json.board, json.gameId,json.key);  break;
     case LOAD_CHAT: loadChat(json.chat); break;
 
     default: console.log("Unrecognized key "+ json.key, json);

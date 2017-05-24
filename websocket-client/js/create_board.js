@@ -1,4 +1,4 @@
-$(document).ready(function(){
+$(document).ready(function () {
 
   var template = $('#event-template').html();
   Mustache.parse(template);
@@ -6,20 +6,30 @@ $(document).ready(function(){
   var $boardsEvents = $("#board-events");
 
   $boardsEvents.empty();
-  for(var i=0; i < 4; i++) $boardsEvents.append(rendered);
+  for (var i = 0; i < 4; i++) $boardsEvents.append(rendered);
   $(".remove-event").click(removeEvent);
 
-  $("#add-event").click(function(){
+  function toggleLabel(checked, tag) {
+    if (checked) { $("#" + tag + "-enabled").hide(); $("#" + tag + "-disabled").show(); }
+    else { $("#" + tag + "-enabled").show(); $("#" + tag + "-disabled").hide(); }
+  }
+  $("#private-game").click(function () {
+    toggleLabel($(this).is(":checked"),'private-game'); 
+  });
+  $("#share-board").click(function () {
+    toggleLabel($(this).is(":checked"),'share-board'); 
+  });
+  $("#add-event").click(function () {
     $boardsEvents.append(rendered);
 
     //Disable pervious handler and set them again
     $(".remove-event").off().click(removeEvent);
   });
 
-  $("#create-board").click(function(){
+  $("#create-board").click(function () {
 
     var events = [];
-    $(".bingo-event").each(function(){
+    $(".bingo-event").each(function () {
       events.push($(this).val());
     });
 
@@ -30,7 +40,8 @@ $(document).ready(function(){
     //TODO fields can't be empty
     //TODO Title cna't be empty
 
-    sendJson({key: CREATE_BOARD,
+    sendJson({
+      key: CREATE_BOARD,
       events: events,
       title: $("#title-board").val(),
       author: myName(),
@@ -40,7 +51,7 @@ $(document).ready(function(){
   });
 });
 
-var removeEvent = function(){
+var removeEvent = function () {
   if ($(".bingo-event").length <= 4) {
     alert("Need at least 4 events");
     return;

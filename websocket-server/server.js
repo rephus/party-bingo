@@ -1,5 +1,6 @@
 
 var ws = require("nodejs-websocket");
+var redis = require('redis').createClient();
 
 //Keys
 var LIST_PUBLIC_GAMES = "list-public-games";
@@ -15,6 +16,21 @@ var clients = {};
 var boards = {};
 var games = {};
 
+redis.get("games", function(err, value){
+  if (err) console.error("Unable to get games ", err) ; 
+  else if( value) {
+    games = JSON.parse(value); 
+    console.log("Loaded games " , Object.keys(games).length);
+  } else {
+    console.warn("Games seems empty: "+value);
+  }
+});  
+function saveGames(){
+ // console.log("Saving games ");
+  redis.set("games", JSON.stringify(games));
+}
+
+setInterval(saveGames, 1000);
 var server = ws.createServer(function (conn) {
 
   var connectionId = conn.key;
@@ -27,7 +43,7 @@ var server = ws.createServer(function (conn) {
        connection: conn
      };
     console.log("Total connections " + Object.keys(clients).length);
-
+    
     conn.on("text", function (str) {
         console.log("Received from "+connectionId+ ": "+str);
         var json = JSON.parse(str);
@@ -55,7 +71,7 @@ var parseJson = function(connection, json){
   switch(json.key){
     case LIST_PUBLIC_GAMES: listPublicGames(connection); break;
     case CREATE_BOARD: createBoard(connection, json); break;
-    case JOIN_GAME: joinGame(connection, json.gameId); break;
+    case JOIN_GAME: joinGame(connection, json.gameId, connection.key); break;
     case MY_INFO: myInfo(connection, json); break;
     case CLICK_EVENT: clickEvent(connection, json); break;
     case SEND_CHAT: sendChat(connection, json); break;
@@ -226,6 +242,7 @@ var createBoard = function(conn, json){
      private: json.private,
      sample: randomBingoFromEvents(events)
    };
+
 
    joinGame(conn, uuid);
 };

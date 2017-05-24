@@ -31,12 +31,12 @@
      <div id='create-board-div' class='hidden screen screen-2'>
        <button class='go-menu'> <-</button>
 
-       <input id='title-board' type='text'/>
+       <input id='title-board' type='text' placeholder="Board title"/>
 
      <script id='event-template' type=x-tmpl-mustache>
        <li>
          <button class='remove-event'>-</button>
-         <input class='bingo-event' type='text'/>
+         <input class='bingo-event' type='text' placeholder="event"/>
        </li>
      </script>
 
@@ -47,14 +47,18 @@
          </li>
        </ul>
        <button id='add-event'>+</button>
+       <br/>
+      <input type="checkbox" id="private-game" />
+      <label for="private-game">Private game</label>
 
-      <label><input type="checkbox" ></input>Private game</label>
-      <p>Anyone can play this board</p>
-      <p class='hidden'>People can join only by invitation</p>
+      <p id='private-game-enabled'>Anyone can play this board</p>
+      <p id='private-game-disabled' class='hidden'>People can join only by invitation</p>
 
-      <label><input type="checkbox" checked></input>Share board</label>
-      <p>This board will be public</p>
-      <p class='hidden'>This board won't be public</p>
+      <input type="checkbox" id="share-board" checked/>
+      <label for="share-board">Share board</label>
+
+      <p id='share-board-enabled' >This board will be public</p>
+      <p id='share-board-disabled' class='hidden'>This board won't be public</p>
 
        <button id='create-board'> Send</button>
 
@@ -67,7 +71,6 @@
       <button class='public-boards'>public-boards</button>
       <button class='my-games'>my-games</button>
       <button class='my-boards'>my-boards</button>
-
 
       <div id='list-boards-div'>
       </div>

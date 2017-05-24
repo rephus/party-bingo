@@ -1,7 +1,8 @@
 {
   "name": "websocket-demo",
   "dependencies": {
-    "nodejs-websocket": "^1.4.0"
+    "nodejs-websocket": "^1.4.0",
+    "redis": "^2.7.1"
   },
   "engine": {
     "node": ">=0.10.25"
