@@ -7,8 +7,6 @@ var connKey;
 
 $(document).ready(function () {
 
-  loadSavedGame();
-
   $("#go-create-board").click(function () {
     changeScreen(SCREEN_CREATE);
   });
@@ -37,6 +35,11 @@ var myName = function () {
   return $(".my-alias").val();
 };
 
+function loadUser(name, avatar){
+      $(".my-alias").val(name);
+    $(".my-avatar").val(avatar);
+
+}
 var updateMyInfo = function () {
   var myInfo = {
     key: MY_INFO,
@@ -44,7 +47,6 @@ var updateMyInfo = function () {
     avatar: $(".my-avatar").val()
   };
   //console.log("Saving user ", myInfo);
-  localStorage.setItem("myUser", JSON.stringify(myInfo));
   sendJson(myInfo);
 };
 
@@ -65,24 +67,6 @@ var drawBoard = function (board) {
   return Mustache.render(template, board);
 };
 
-function loadSavedGame() {
-
-
-  var myUser = localStorage.getItem("myUser");
-  if (myUser) {
-    console.log("Loaded user ", myUser);
-    myUser = JSON.parse(myUser);
-    $(".my-alias").val(myUser.name);
-    $(".my-avatar").val(myUser.avatar)
-  }
-  var gameId = localStorage.getItem("gameId");
-  if (gameId) {
-    setTimeout(function(){
-       sendJson({ key: JOIN_GAME, gameId: gameId });
-    }, 500);
-}
-
-}
 function clickEvent() {
   var i = $(this).attr('event');
   sendJson({ key: CLICK_EVENT, event: i, game: gameId });
@@ -97,7 +81,13 @@ function clickEvent() {
     $(this).addClass('checked-true');
   }
 }
-
+function saveKey(_connKey) {
+  connKey = _connKey;
+  if (!localStorage.getItem("connKey") ){
+    console.log("Saving new connKey "+ connKey);
+    localStorage.setItem("connKey", connKey);
+  }  
+}
 var loadGame = function (board, _gameId, connKey) {
     gameId = _gameId; 
   console.log("Loading connKey " , connKey);
@@ -118,10 +108,6 @@ var loadGame = function (board, _gameId, connKey) {
     });
 
   });
-
-  localStorage.setItem("board", JSON.stringify(board));
-  localStorage.setItem("gameId", gameId);
-
 };
 
 var loadBoards = function (boards) {
@@ -134,8 +120,11 @@ var loadBoards = function (boards) {
   $(".board").click(function () {
     var gameId = $(this).attr('game-id');
     var gameTitle = $(this).attr('game-title');
-    console.log("Joining boardID " + gameId + ": " + gameTitle);
-    sendJson({ key: JOIN_GAME, gameId: gameId });
+    if (gameId) {
+      console.log("Joining boardID " + gameId + ": " + gameTitle);
+      sendJson({ key: JOIN_GAME, gameId: gameId });
+
+    }
   });
 };
 

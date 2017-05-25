@@ -11,26 +11,43 @@ var JOIN_GAME = "join-game";
 var MY_INFO = "my-info";
 var CLICK_EVENT = "click-event";
 var SEND_CHAT = "send-chat";
+var LOAD_USER = "load-user";
+var GET_KEY = "get-key"; 
 
 var clients = {};
 var boards = {};
 var games = {};
 
-redis.get("games", function(err, value){
-  if (err) console.error("Unable to get games ", err) ; 
-  else if( value) {
-    games = JSON.parse(value); 
-    console.log("Loaded games " , Object.keys(games).length);
-  } else {
-    console.warn("Games seems empty: "+value);
-  }
-});  
-function saveGames(){
- // console.log("Saving games ");
-  redis.set("games", JSON.stringify(games));
+ws.clients = [];
+
+function loadFromRedis(tag, callback) {
+  redis.get(tag, function(err, value){
+    if (err) console.error("Unable to get games ", err) ; 
+    else if( value) {
+      var loaded = JSON.parse(value);
+      console.log("Loaded "+tag , Object.keys(loaded).length);
+      callback(loaded);
+    } else {
+      console.warn("Can't load " +tag+ ", seems empty: "+value);
+    }
+  });  
 }
 
-setInterval(saveGames, 1000);
+loadFromRedis('boards', function(loaded){ boards = loaded; });
+loadFromRedis('games', function(loaded){ games = loaded; });
+loadFromRedis('clients', function(loaded){ clients = loaded; });
+
+function saveGames(){
+  //console.log("Saving games ");
+  // console.log("CLIENTS ", clients);
+
+  redis.set("games", JSON.stringify(games));
+  redis.set("boards", JSON.stringify(boards));
+    redis.set("clients", JSON.stringify(clients));
+
+}
+
+setInterval(saveGames, 5000);
 var server = ws.createServer(function (conn) {
 
   var connectionId = conn.key;
@@ -40,8 +57,12 @@ var server = ws.createServer(function (conn) {
      clients[connectionId] = {
        id: connectionId,
        created: new Date().getTime(),
-       connection: conn
+       name: "anonymous",
+       avatar: "yellow",
+       gameIds: [],
+      // connection: conn
      };
+     ws.clients.push(conn);
     console.log("Total connections " + Object.keys(clients).length);
     
     conn.on("text", function (str) {
@@ -53,9 +74,9 @@ var server = ws.createServer(function (conn) {
     conn.on("close", function (code, reason) {
         console.log("Connection closed ", connectionId);
 
-        delete clients[connectionId];
-        console.log("Total connections " + Object.keys(clients).length);
-        //clearInterval(interval);
+        //delete clients[connectionId];
+        //console.log("Total connections " + Object.keys(clients).length);
+        ////clearInterval(interval);
     });
 
 }).listen(8001);
@@ -75,6 +96,8 @@ var parseJson = function(connection, json){
     case MY_INFO: myInfo(connection, json); break;
     case CLICK_EVENT: clickEvent(connection, json); break;
     case SEND_CHAT: sendChat(connection, json); break;
+    case LOAD_USER: loadUser(connection, json); break;
+    case GET_KEY: sendJson(connection, {key: GET_KEY, connKey: connection.key }); break;
 
     default: console.log("Unrecognized key "+ json.key, json);
   }
@@ -111,7 +134,7 @@ var clickEvent = function(conn, json) {
   }
   var bingo = game.players[conn.key].bingo;
   var event = bingo.events[eventId];
-  event.checked = true;
+  event.checked = !event.checked;
 
   var player = clients[conn.key];
   game.chat.push({avatar: player.avatar,
@@ -122,9 +145,37 @@ var clickEvent = function(conn, json) {
 
 };
 
+function loadUser(conn, json) {
+  var client = clients[json.connKey];
+  if (client) {
+      console.log("Loading user "+ client.name + ": "+json.connKey + " -> " + conn.key );
+       sendJson(conn, {
+        key: LOAD_USER,
+        name:  client.name,
+        avatar: client.avatar, 
+    });
+
+    if (client.gameIds.length > 0){
+
+        client.gameIds.forEach(function(gameId){
+            var game = games[gameId];
+            game.players[conn.key] = game.players[json.connKey];
+            //delete game.players[json.connKey];
+            console.log("Copied game ID " + gameId);
+        });
+
+        joinGame(conn, client.gameIds[0]);
+    }
+    clients[conn.key] = client;
+    //delete clients[json.connKey];
+  } else {
+    console.warn("Unable to find user ", json);
+  }
+}
 var myInfo = function(conn, json) {
   clients[conn.key].avatar = json.avatar;
   clients[conn.key].name = json.name;
+  //clients[conn.key].connection = conn;
 };
 
 function getRandomInt(min, max) {
@@ -181,8 +232,11 @@ var joinGame = function(conn, gameId) {
     sendJson(conn, {
       key: LOAD_GAME,
       board:  game.players[conn.key].bingo,
-      gameId: gameId
+      gameId: gameId,
+      connKey: conn.key,
     });
+
+    refreshChat(gameId);
     return;
   }
 
@@ -193,6 +247,7 @@ var joinGame = function(conn, gameId) {
     id: conn.key,
     bingo: bingo
   };
+  clients[conn.key].gameIds.push(gameId);
   var player = clients[conn.key];
   game.chat.push({avatar: player.avatar,
     name: player.name,
@@ -200,7 +255,8 @@ var joinGame = function(conn, gameId) {
   sendJson(conn, {
     key: LOAD_GAME,
     board: bingo,
-    gameId: gameId
+    gameId: gameId,
+    connKey: conn.key
   });
 
   refreshChat(gameId);
@@ -212,9 +268,16 @@ var refreshChat = function(gameId){
   for(var i=0; i < players.length; i++){
     var playerId = players[i];
     var client = clients[playerId];
+    /*
     if (client && client.connection){
        sendJson(client.connection, {key:LOAD_CHAT, chat: game.chat});
-    }
+    }*/
+     ws.clients.forEach(function (client) {
+        if (client.readyState === 1) {
+         sendJson(client, {key:LOAD_CHAT, chat: game.chat});
+        }
+      });
+
   }
 };
 var createBoard = function(conn, json){
